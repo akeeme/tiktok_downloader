@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Get the secret key from environment variables
 
 
 
