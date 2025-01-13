@@ -1,0 +1,70 @@
+/* Reset some basic margins/padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The wrapper around input + button so they're side by side */
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+input[type="text"] {
+    width: 400px;
+    padding: 15px 20px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    font-size: 16px;
+    outline: none;
+}
+
+input[type="submit"] {
+    margin-left: -50px; /* Move the button over the right edge of input */
+    padding: 13px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #3498db;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #2980b9;
+}
+
+/* Adjust for small screens */
+@media (max-width: 480px) {
+    input[type="text"] {
+        width: 200px;
+    }
+    input[type="submit"] {
+        margin-left: 10px;
+    }
+}

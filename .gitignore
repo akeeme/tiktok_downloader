@@ -2,3 +2,4 @@
 .part
 *.json
 output/*
+__pycache__/*

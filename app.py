@@ -3,6 +3,8 @@ import os
 import argparse
 # import shutil
 
+
+
 def download_tiktok_video(url: str, output: str = None):
     """
     Download a single TikTok video from the given URL.
@@ -17,7 +19,8 @@ def download_tiktok_video(url: str, output: str = None):
     """
     
     # Default output if none provided
-    output = "output/tiktok_vid.mp4" if not output else output
+    uniq_id = url.split("/")[-1]
+    output = f"output/tiktok_{uniq_id}.mp4" if not output else f'{output}/tiktok_{uniq_id}.mp4'
 
     base, ext = os.path.splitext(output)
     counter = 1
@@ -85,6 +88,8 @@ def download_tiktok_playlist(url: str, output_dir: str = None):
         return
 
     print(f"Downloaded the TikTok playlist to {playlist_folder}")
+    
+    return playlist_title
 
     # (Optional) Code to compress the folder into a zip archive:
     # zip_filename = f"{playlist_title}.zip"
