@@ -43,7 +43,8 @@ dependencies = [
     "trove-classifiers (==2025.1.10.15)",
     "urllib3 (==2.3.0)",
     "virtualenv (==20.28.1)",
-    "flask (>=3.1.0,<4.0.0)"
+    "flask (>=3.1.0,<4.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)"
 ]
 
 
