@@ -23,7 +23,7 @@ DOWNLOADS = {}
 
 # Cleanup configuration
 CLEANUP_INTERVAL = 60  # Check for stale files every 60 seconds
-FILE_EXPIRATION_TIME = 180  # Expire files after 3 minutes (180 seconds)
+FILE_EXPIRATION_TIME = 600  # expire files after 10 minutes (600 seconds)
 
 
 ### Periodic Cleanup Task ###
@@ -155,7 +155,7 @@ def cleanup_immediate(file_id):
     """
     Cleans up the file and folder if the user leaves the page without downloading.
     """
-    time.sleep(10) # Wait for 10 seconds before cleaning up
+    time.sleep(300) # Wait for 5 minutes before cleaning up
     if file_id not in DOWNLOADS:
         return jsonify({"error": "File not found or already removed."}), 404
 
