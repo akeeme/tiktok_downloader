@@ -6,11 +6,16 @@ import tempfile
 import zipfile
 import time
 import threading
+from dotenv import load_dotenv
+# Load environment variables from .env file
+load_dotenv()
 
-from app import download_tiktok_video, download_tiktok_playlist, is_playlist
+# Get the secret key from environment variables
+
+
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = os.getenv("SECRET_KEY")
 
 # Dictionary to track file paths and timestamps: { file_id: { "path": "/path/to/file", "timestamp": 1671234567 } }
 DOWNLOADS = {}

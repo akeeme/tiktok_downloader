@@ -44,7 +44,8 @@ dependencies = [
     "urllib3 (==2.3.0)",
     "virtualenv (==20.28.1)",
     "flask (>=3.1.0,<4.0.0)",
-    "gunicorn (>=23.0.0,<24.0.0)"
+    "gunicorn (>=23.0.0,<24.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)"
 ]
 
 
