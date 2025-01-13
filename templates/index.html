@@ -1,20 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download TikTok Video</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8">
+  <title>Download TikTok Video</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Download TikTok Video</h1>
-        <form method="POST">
-            <div class="input-group">
-                <input type="text" name="url" placeholder="Paste TikTok URL here..." required>
-                <input type="submit" value="Download">
-            </div>
-        </form>
+  <div class="container">
+    <h1>Download TikTok Video/Playlist</h1>
+    
+    <!-- Input + Button -->
+    <div class="input-group">
+      <input type="text" id="url" placeholder="Paste TikTok URL here..." required>
+      <button type="button" onclick="startDownload()">Download</button>
     </div>
+    <p id="pub-txt">make sure the video or playlist is public.</p>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator">
+      <div class="spinner"></div>
+      <p class="loading-text">processing your request (ts could take some time if your playlist is long asf)...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMsg" class="error-msg"></div>
+  </div>
+
+  <script>
+    async function startDownload() {
+      const urlInput = document.getElementById('url');
+      const tiktokUrl = urlInput.value.trim();
+      if (!tiktokUrl) {
+        showError("Please enter a TikTok URL.");
+        return;
+      }
+
+      // Show spinner
+      document.getElementById('loadingIndicator').style.display = 'block';
+      // Hide any previous error
+      document.getElementById('errorMsg').textContent = '';
+
+      try {
+        const resp = await fetch("{{ url_for('process_download') }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url: tiktokUrl })
+        });
+        
+        const data = await resp.json();
+
+        // Hide spinner
+        document.getElementById('loadingIndicator').style.display = 'none';
+
+        if (data.error) {
+          showError("ERROR: Invalid TikTok URL or Video Not Available. Please try again.");
+        } else if (data.file_id) {
+          // Success: redirect to success page
+          window.location.href = "/success/" + data.file_id;
+        } else {
+          showError("Unknown error. Please try again.");
+        }
+      } catch (err) {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        showError(err.message || "Network error, please try again.");
+      }
+    }
+
+    function showError(msg) {
+      const errDiv = document.getElementById('errorMsg');
+      errDiv.textContent = msg;
+    }
+  </script>
 </body>
 </html>

@@ -1,79 +1,169 @@
-from flask import Flask, request, send_file, render_template, g
-from app import download_tiktok_video, download_tiktok_playlist, is_playlist
+from flask import Flask, request, render_template, redirect, url_for, send_file, jsonify
 import os
+import uuid
 import shutil
 import tempfile
 import zipfile
+import time
+import threading
+
+from app import download_tiktok_video, download_tiktok_playlist, is_playlist
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-@app.before_request
-def create_temp_folder():
-    """
-    Before each request, if it's a POST, create a unique temp folder and store
-    it in the request context 'g' so we can access it in the route.
-    """
-    if request.method == "POST":
-        g.temp_folder = tempfile.mkdtemp(prefix="tiktok_")
-        print(f"Created temp folder: {g.temp_folder}")
+# Dictionary to track file paths and timestamps: { file_id: { "path": "/path/to/file", "timestamp": 1671234567 } }
+DOWNLOADS = {}
 
-@app.after_request
-def remove_temp_folder(response):
-    """
-    After the request finishes, remove the temp folder we created if it exists.
-    This ensures cleanup even if an error occurred or send_file was used.
-    """
-    temp_folder = getattr(g, "temp_folder", None)
-    if temp_folder and os.path.exists(temp_folder):
-        try:
-            shutil.rmtree(temp_folder, ignore_errors=True)
-            print(f"Cleanup successful: Removed temporary folder {temp_folder}")
-        except Exception as e:
-            print(f"Cleanup failed for {temp_folder}: {e}")
-    return response
+# Cleanup configuration
+CLEANUP_INTERVAL = 60  # Check for stale files every 60 seconds
+FILE_EXPIRATION_TIME = 180  # Expire files after 3 minutes (180 seconds)
 
-@app.route("/", methods=["GET", "POST"])
+
+### Periodic Cleanup Task ###
+def cleanup_stale_files():
+    """
+    Periodically checks the DOWNLOADS dictionary for stale files and removes them.
+    """
+    while True:
+        current_time = time.time()
+        stale_files = []
+
+        # Find files older than FILE_EXPIRATION_TIME
+        for file_id, data in list(DOWNLOADS.items()):
+            if current_time - data["timestamp"] > FILE_EXPIRATION_TIME:
+                stale_files.append((file_id, data["path"]))
+
+        # Remove stale files and their parent directories
+        for file_id, path in stale_files:
+            temp_dir = os.path.dirname(path)
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                print(f"Stale file cleaned up: {path}")
+            DOWNLOADS.pop(file_id, None)
+
+        # Sleep until the next cleanup cycle
+        time.sleep(CLEANUP_INTERVAL)
+
+
+# Start the cleanup task in a background thread
+threading.Thread(target=cleanup_stale_files, daemon=True).start()
+
+
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == "POST":
-        url = request.form.get("url")
-        if not url:
-            return "No URL provided.", 400
+    """
+    Renders the main page with the URL input.
+    """
+    return render_template("index.html")
 
-        # Retrieve the per-request folder from g
-        temp_folder = g.temp_folder
+
+@app.route("/process", methods=["POST"])
+def process_download():
+    """
+    Processes the TikTok download request:
+      - Downloads the video(s) to a temp folder,
+      - If it's a playlist, zips the files,
+      - Returns a JSON response with file_id or an error message.
+    """
+    try:
+        data = request.get_json()
+        if not data or "url" not in data:
+            return jsonify({"error": "No URL provided"}), 400
+
+        url = data["url"]
+        temp_folder = tempfile.mkdtemp(prefix="tiktok_")
 
         if is_playlist(url):
-            # Download entire playlist into temp_folder
+            # Handle playlist
             playlist_title = download_tiktok_playlist(url, output_dir=temp_folder)
 
-            # Zip up the playlist
+            # Zip the playlist
             zip_filename = os.path.join(temp_folder, f"{playlist_title}.zip")
             with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zf:
                 for root, dirs, files in os.walk(temp_folder):
                     for f in files:
-                        # Skip the zip itself
                         if f == f"{playlist_title}.zip":
                             continue
                         full_path = os.path.join(root, f)
                         arcname = os.path.relpath(full_path, temp_folder)
                         zf.write(full_path, arcname)
-
-            return send_file(zip_filename, as_attachment=True)
-
+            final_file = zip_filename
         else:
-            # Single video logic
+            # Handle single video
             download_tiktok_video(url, output=temp_folder)
-
-            # Grab the first file in temp_folder
             files_in_temp = os.listdir(temp_folder)
             if not files_in_temp:
-                return "No file was downloaded.", 500
+                shutil.rmtree(temp_folder, ignore_errors=True)
+                return jsonify({"error": "No file was downloaded"}), 500
+            final_file = os.path.join(temp_folder, files_in_temp[0])
 
-            video_filename = os.path.join(temp_folder, files_in_temp[0])
-            return send_file(video_filename, as_attachment=True)
+        # Generate unique ID and store file path + timestamp
+        unique_id = str(uuid.uuid4())
+        DOWNLOADS[unique_id] = {"path": final_file, "timestamp": time.time()}
 
-    return render_template("index.html")
+        return jsonify({"file_id": unique_id, "error": None}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/success/<file_id>", methods=["GET"])
+def success_page(file_id):
+    """
+    Renders the success page with a "Download Now" link.
+    """
+    if file_id not in DOWNLOADS:
+        return "File not found or already removed.", 404
+    return render_template("success.html", file_id=file_id)
+
+
+@app.route("/download/<file_id>", methods=["GET"])
+def download_file(file_id):
+    """
+    Sends the file to the user and removes it from the server afterward.
+    """
+    if file_id not in DOWNLOADS:
+        return "File not found or already removed.", 404
+
+    final_file = DOWNLOADS[file_id]["path"]
+    temp_dir = os.path.dirname(final_file)
+
+    # Remove from dictionary so the file can't be re-downloaded
+    DOWNLOADS.pop(file_id, None)
+
+    def cleanup_file(response):
+        """
+        Deletes the temp folder after sending the file.
+        """
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"Cleaned up: {temp_dir}")
+        return response
+
+    return cleanup_file(send_file(final_file, as_attachment=True))
+
+
+@app.route("/cleanup/<file_id>", methods=["POST"])
+def cleanup_immediate(file_id):
+    """
+    Cleans up the file and folder if the user leaves the page without downloading.
+    """
+    time.sleep(10) # Wait for 10 seconds before cleaning up
+    if file_id not in DOWNLOADS:
+        return jsonify({"error": "File not found or already removed."}), 404
+
+    final_file = DOWNLOADS[file_id]["path"]
+    temp_dir = os.path.dirname(final_file)
+
+    # Remove file and its folder
+    DOWNLOADS.pop(file_id, None)
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        print(f"Immediate cleanup: {temp_dir}")
+
+    return jsonify({"message": "File cleaned up immediately."}), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True)

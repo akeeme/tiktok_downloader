@@ -1,4 +1,4 @@
-/* Reset some basic margins/padding */
+/* Reset */
 * {
     margin: 0;
     padding: 0;
@@ -12,59 +12,145 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
-}
-
-.container {
     text-align: center;
 }
 
+.container {
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 h1 {
+    margin-bottom: 30px;
+    font-size: 2rem;
+}
+
+/* Input group */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 20px;
 }
 
-form {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* The wrapper around input + button so they're side by side */
-.input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
 input[type="text"] {
-    width: 400px;
-    padding: 15px 20px;
+    width: 100%;
+    max-width: 1000px;
+    padding: 14px 20px;
     border: 1px solid #ccc;
     border-radius: 25px;
     font-size: 16px;
     outline: none;
+    margin-bottom: 10px;
 }
 
-input[type="submit"] {
-    margin-left: -50px; /* Move the button over the right edge of input */
-    padding: 13px 20px;
+button {
+    padding: 14px 20px;
     border: none;
     border-radius: 25px;
     font-size: 16px;
     color: #fff;
     background-color: #3498db;
     cursor: pointer;
+    width: 100%;
+    max-width: 200px;
 }
-
-input[type="submit"]:hover {
+button:hover {
     background-color: #2980b9;
 }
 
-/* Adjust for small screens */
-@media (max-width: 480px) {
-    input[type="text"] {
-        width: 200px;
+#pub-txt {
+    color: #666;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    display: none; /* Hidden by default */
+    margin: 20px auto;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 6px solid #ddd;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* Error message */
+.error-msg {
+    margin-top: 20px;
+    color: red;
+    font-weight: bold;
+}
+
+.download-link {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px auto;
+    font-size: 1.2rem;
+    color: #fff;
+    background-color: #27ae60;
+    text-decoration: none;
+    border-radius: 20px;
+}
+.download-link:hover {
+    background-color: #229954;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
     }
-    input[type="submit"] {
-        margin-left: 10px;
+
+    .container {
+        width: 90%;
+    }
+
+    input[type="text"] {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    input[type="text"] {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 4px solid #ddd;
+        border-top: 4px solid #3498db;
     }
 }
