@@ -7,8 +7,10 @@ import zipfile
 import time
 import threading
 from dotenv import load_dotenv
+from app import download_tiktok_video, download_tiktok_playlist, is_playlist
 # Load environment variables from .env file
 load_dotenv()
+
 
 
 
