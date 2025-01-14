@@ -16,8 +16,6 @@ A web application built with Flask that allows users to download TikTok videos o
 
 ---
 
----
-
 ## Usage
 
 1. Enter the TikTok video or playlist URL in the text input field.
