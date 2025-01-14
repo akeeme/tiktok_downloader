@@ -16,6 +16,17 @@ A web application built with Flask that allows users to download TikTok videos o
 
 ---
 
+---
+
+## Usage
+
+1. Enter the TikTok video or playlist URL in the text input field.
+2. Click the **Download** button to start processing.
+3. Wait for the success page to appear.
+4. Click **Download Now** to download the video or playlist (ZIP).
+
+
+![webapp-gif](https://github.com/user-attachments/assets/4a780a89-35b7-4197-b7c2-24a822fd81c0)
 
 
 ## Installation
@@ -53,15 +64,6 @@ A web application built with Flask that allows users to download TikTok videos o
 
 ---
 
-## Usage
-
-1. Enter the TikTok video or playlist URL in the text input field.
-2. Click the **Download** button to start processing.
-3. Wait for the success page to appear.
-4. Click **Download Now** to download the video or playlist (ZIP).
-
----
-
 ## Deployment
 
 To deploy the app to production:
@@ -72,7 +74,7 @@ To deploy the app to production:
      ```bash
      gunicorn index:app
      ```
-   - Push all changes to the `pyproject.toml`, `requirements.txt`, and `index.py`.
+   - Push all changes to the `pyproject.toml`, and `index.py`.
 
 2. **Alternative Hosting**:
    - Follow similar steps for platforms like Railway, Deta, or Fly.io.
